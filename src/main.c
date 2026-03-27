@@ -38,12 +38,12 @@ main (void)
 	SetTargetFPS (30);
 
 	bool board[BOARD_COLS * BOARD_ROWS] = { 0 };
-	struct ant_t ants[ANTS_COUNT]              = { 0 };
+	struct ant_t ants[ANTS_COUNT]       = { 0 };
 
 	for (int i = 0; i < ANTS_COUNT; i++)
 		{
-			ants[i].x   = ystar_between (&seed, 0, BOARD_COLS);
-			ants[i].y   = ystar_between (&seed, 0, BOARD_ROWS);
+			ants[i].x         = ystar_between (&seed, 0, BOARD_COLS);
+			ants[i].y         = ystar_between (&seed, 0, BOARD_ROWS);
 			ants[i].direction = (enum direction_t) (ystar_between (&seed, 0, 4));
 		}
 
@@ -52,6 +52,31 @@ main (void)
 			BeginDrawing ();
 			ClearBackground (RAYWHITE);
 			DrawText ("Press ESC to quit", 10, WINDOW_HEIGHT - 20, 10, DARKGRAY);
+
+			for (int y = 0; y < BOARD_ROWS; y++)
+				{
+					for (int x = 0; x < BOARD_COLS; x++)
+						{
+							if (board[y * BOARD_COLS + x])
+								{
+									DrawRectangle (x * CELL_SIZE,
+									               y * CELL_SIZE,
+									               CELL_SIZE,
+									               CELL_SIZE,
+									               BLACK);
+								}
+						}
+				}
+
+			for (int i = 0; i < ANTS_COUNT; i++)
+				{
+					DrawRectangle (ants[i].x * CELL_SIZE,
+					               ants[i].y * CELL_SIZE,
+					               CELL_SIZE,
+					               CELL_SIZE,
+					               RED);
+				}
+
 			EndDrawing ();
 		}
 
