@@ -1,0 +1,86 @@
+:em: {sp}--{sp}
+:license-link: link:https://www.gnu.org/licenses/agpl-3.0.en.html[]
+:raw-url: https://raw.githubusercontent.com/vs-123/ant/refs/heads/main
+
+= ANT
+
+TODO
+
+== BUILD INSTRUCTIONS
+
+* Obtain a local copy of this repository with `git` and enter it
++
+[source,]
+----
+  %  git clone https://github.com/vs-123/ant.git
+  %  cd ant
+----
+
+* Ensure you have the following prerequisites:
+** A C99-compliant C compiler
+** CMake version `3.10` or higher (optional if you wish to proceed with <<manual-method, MANUAL METHOD>>)
+** Raylib
+
+=== CMAKE METHOD
+
+* Create a `build` directory and enter it
++
+[source,]
+----
+  %  mkdir build
+  %  cd build
+----
+
+* Use CMake to build and link the project
++
+[source,]
+----
+  %  cmake ..
+  %  cmake --build .
+  %  ls -Fa
+  ./  ../  ant* compile_commands.json  Makefile
+----
+
+* You may now proceed with <<usage-section, USAGE>>
+
+[[manual-method]]
+=== MANUAL METHOD
+
+* Create a `build` directory and enter it
++
+[source,]
+----
+  %  mkdir build
+  %  cd build
+----
+
+* Use the compiler of your choice to compile `src/main.c` 
++
+*[NOTE]* Make sure to link `raylib` and other necessary libraries when you compile the project.
++
+[source,]
+----
+  %  clang -o ant ../src/client.c $(pkg-config --cflags --libs raylib)
+  %  ls -Fa
+  ./  ../  ant*
+----
+
+* You may now proceed with <<usage-section, USAGE>>
+
+[[usage-section]]
+== USAGE
+
+* Execute the binary
++
+[source,]
+----
+  %  ./ant
+----
+
+== LICENSE
+
+This project is licensed under the *GNU Affero General Public License version 3.0 or later*.
+
+*NO WARRANTY PROVIDED*
+
+For more information, see `LICENSE` file or visit {license-link}.
