@@ -165,11 +165,18 @@ game_render (struct game_t *game)
 			               RED);
 		}
 
+	DrawRectangle (0, 0, WINDOW_WIDTH, 40, Fade (LIGHTGRAY, 0.8f));
+	DrawText ("[SPACE] PAUSE/RESUME | [N] STEP | [MOUSE1] " "TOGGLE ANT",
+	          10,
+	          12,
+	          18,
+	          BLACK);
+
 	DrawText (TextFormat ("[ANTS] %d | %s",
 	                      game->ants_active_count,
 	                      game->is_paused ? "PAUSED" : "RUNNING"),
 	          10,
-	          10,
+	          WINDOW_HEIGHT - 30,
 	          20,
 	          (game->is_paused ? RED : DARKGREEN));
 }
