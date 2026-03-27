@@ -1,10 +1,38 @@
 :em: {sp}--{sp}
 :license-link: link:https://www.gnu.org/licenses/agpl-3.0.en.html[]
 :raw-url: https://raw.githubusercontent.com/vs-123/ant/refs/heads/main
+:lant: https://en.wikipedia.org/wiki/Langton's_ant
 
 = ANT
 
-TODO
+*ant* is a multi-agent link:{lant}[Langton's Ant] simulation implemented in C99. This provides a real-time interactive environment for observing complex emergent behaviours from simple cellular automata rules.
+
+== FEATURES
+
+* **[DYNAMIC INTERACTION]** {em} Toggle individual ants on the board via mouse input
+* **[STATE CONTROL]** {em} Pause, resume or step through the simulation frame by frame
+* **[SCALABLE AGENTS]** {em} Supports up to `C - 1` number of active ants where `C` is the number of cells in the board
+* **[VISIBILITY]** {em} Toggleable UI overlay is implemented to allow for a clean distraction-free viewing experience
+* **[WRAP AROUND TOPOLOGY]** {em} Ants in this project navigate a toroidal grid. They transition seamlessly across board edges
+
+== Controls
+
+[cols="1,1",options="header"]
+|===
+| KEY | ACTION 
+| *SPACE* | Toggle Pause/Resume 
+| *N* | Step {em} Increment by one frame 
+| *C* | Clear Board 
+| *H* | Toggle UI Visibility 
+| *MOUSE1* | Toggle ant at cursor position 
+|===
+
+== Rules
+
+The simulation follows the standard link:{lant}[Langton's Ant] logic for each agent:
+
+. *WHITE SQUARE* {em} Turn 90° clockwise, flip the colour of the square to black and move forward one unit.
+. *BLACK SQUARE* {em} Turn 90° counter clockwise, flip the colour of the square to white and move forward one unit.
 
 == BUILD INSTRUCTIONS
 
