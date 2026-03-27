@@ -1,4 +1,6 @@
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 #define YSTAR_IMPLEMENTATION
@@ -8,11 +10,10 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 800
 
-#define CELL_SIZE 10
+#define CELL_SIZE 20
 #define BOARD_COLS (WINDOW_WIDTH / CELL_SIZE)
 #define BOARD_ROWS (WINDOW_HEIGHT / CELL_SIZE)
-
-#define ANTS_COUNT 10
+#define MAX_ANTS (BOARD_COLS * BOARD_ROWS - 1)
 
 enum direction_t
 {
@@ -24,37 +25,36 @@ enum direction_t
 
 struct ant_t
 {
-	int x;
-	int y;
+	unsigned int x;
+	unsigned int y;
 	enum direction_t direction;
 };
 
 struct game_t
 {
-	bool board[BOARD_COLS * BOARD_ROWS];
-	struct ant_t ants[ANTS_COUNT];
+	bool *board;
+	struct ant_t ants[MAX_ANTS];
+	unsigned int ants_active_count;
 	uint64_t seed;
+	bool is_paused;
 };
 
 void
 game_init (struct game_t *game)
 {
-	game->seed = time (NULL);
-	for (int i = 0; i < ANTS_COUNT; i++)
-		{
-			game->ants[i].x = ystar_between (&game->seed, 0, BOARD_COLS);
-			game->ants[i].y = ystar_between (&game->seed, 0, BOARD_ROWS);
-			game->ants[i].direction
-			    = (enum direction_t) (ystar_between (&game->seed, 0, 4));
-		}
+	game->seed              = (uint64_t)time (NULL);
+	game->is_paused         = true;
+	game->ants_active_count = 0;
+
+	game->board = calloc (BOARD_COLS * BOARD_ROWS, sizeof (bool));
 }
 
 void
 game_update (struct game_t *game)
 {
-	for (int i = 0; i < ANTS_COUNT; i++)
+	for (unsigned int i = 0; i < game->ants_active_count; i++)
 		{
-			int index = game->ants[i].y * BOARD_COLS + game->ants[i].x;
+			unsigned int index = game->ants[i].y * BOARD_COLS + game->ants[i].x;
 
 			if (game->board[index])
 				{
@@ -89,26 +89,74 @@ game_update (struct game_t *game)
 }
 
 void
+game_handle_input (struct game_t *game)
+{
+	if (IsKeyPressed (KEY_SPACE))
+		{
+			game->is_paused = !game->is_paused;
+		}
+
+	if (IsKeyPressed (KEY_N) || IsKeyPressedRepeat (KEY_N))
+		{
+			game->is_paused = true;
+			game_update (game);
+		}
+
+	if (IsMouseButtonPressed (MOUSE_LEFT_BUTTON))
+		{
+			Vector2 mouse_pos   = GetMousePosition ();
+			unsigned int cell_x = (unsigned int)(mouse_pos.x / CELL_SIZE);
+			unsigned int cell_y = (unsigned int)(mouse_pos.y / CELL_SIZE);
+
+			if (cell_x >= BOARD_COLS || cell_y >= BOARD_ROWS)
+				{
+					return;
+				}
+
+			int found_idx = -1;
+			for (unsigned int i = 0; i < game->ants_active_count; i++)
+				{
+					if (game->ants[i].x == cell_x && game->ants[i].y == cell_y)
+						{
+							found_idx = i;
+							break;
+						}
+				}
+
+			if (found_idx != -1)
+				{
+					game->ants[found_idx] = game->ants[game->ants_active_count - 1];
+					game->ants_active_count--;
+				}
+			else if (game->ants_active_count < MAX_ANTS)
+				{
+					unsigned int new_idx  = game->ants_active_count++;
+					game->ants[new_idx].x = cell_x;
+					game->ants[new_idx].y = cell_y;
+					game->ants[new_idx].direction
+					    = (enum direction_t)ystar_between (&game->seed, 0, 4);
+				}
+		}
+}
+
+void
 game_render (struct game_t *game)
 {
 	ClearBackground (RAYWHITE);
 
-	for (int y = 0; y < BOARD_ROWS; y++)
+	for (unsigned int i = 0; i < BOARD_COLS * BOARD_ROWS; i++)
 		{
-			for (int x = 0; x < BOARD_COLS; x++)
+			if (game->board[i])
 				{
-					if (game->board[y * BOARD_COLS + x])
-						{
-							DrawRectangle (x * CELL_SIZE,
-							               y * CELL_SIZE,
-							               CELL_SIZE,
-							               CELL_SIZE,
-							               BLACK);
-						}
+					DrawRectangle ((i % BOARD_COLS) * CELL_SIZE,
+					               (i / BOARD_COLS) * CELL_SIZE,
+					               CELL_SIZE,
+					               CELL_SIZE,
+					               BLACK);
 				}
 		}
 
-	for (int i = 0; i < ANTS_COUNT; i++)
+	for (unsigned int i = 0; i < game->ants_active_count; i++)
 		{
 			DrawRectangle (game->ants[i].x * CELL_SIZE,
 			               game->ants[i].y * CELL_SIZE,
@@ -117,13 +165,18 @@ game_render (struct game_t *game)
 			               RED);
 		}
 
-	DrawText ("Press ESC to quit", 10, WINDOW_HEIGHT - 20, 10, DARKGRAY);
+	DrawText (TextFormat ("[ANTS] %d | %s",
+	                      game->ants_active_count,
+	                      game->is_paused ? "PAUSED" : "RUNNING"),
+	          10,
+	          10,
+	          20,
+	          (game->is_paused ? RED : DARKGREEN));
 }
 
 int
 main (void)
 {
-
 	InitWindow (WINDOW_WIDTH, WINDOW_HEIGHT, "Ant -- vs-123");
 	SetTargetFPS (30);
 
@@ -132,12 +185,19 @@ main (void)
 
 	while (!WindowShouldClose ())
 		{
-			game_update (&game);
+			game_handle_input (&game);
+
+			if (!game.is_paused)
+				{
+					game_update (&game);
+				}
 
 			BeginDrawing ();
 			game_render (&game);
 			EndDrawing ();
 		}
 
+	free (game.board);
+	CloseWindow ();
 	return 0;
 }
