@@ -37,7 +37,11 @@ struct game_t
 	struct ant_t ants[MAX_ANTS];
 	unsigned int ants_active_count;
 	uint64_t seed;
+	int speed_threshold;
+	int speed_counter;
+
 	bool is_paused;
+	bool show_ui;
 };
 
 void
@@ -46,6 +50,9 @@ game_init (struct game_t *game)
 	game->seed              = (uint64_t)time (NULL);
 	game->is_paused         = true;
 	game->ants_active_count = 0;
+	game->speed_threshold   = 1;
+	game->speed_counter     = 0;
+	game->show_ui           = 1;
 
 	game->board = calloc (BOARD_COLS * BOARD_ROWS, sizeof (bool));
 }
@@ -97,6 +104,11 @@ game_handle_input (struct game_t *game)
 			game->is_paused = !game->is_paused;
 		}
 
+	if (IsKeyPressed (KEY_H))
+		{
+			game->show_ui = !game->show_ui;
+		}
+
 	if (IsKeyPressed (KEY_N) || IsKeyPressedRepeat (KEY_N))
 		{
 			game->is_paused = true;
@@ -107,6 +119,17 @@ game_handle_input (struct game_t *game)
 		{
 			memset (game->board, 0, BOARD_COLS * BOARD_ROWS * sizeof (bool));
 			game->ants_active_count = 0;
+		}
+
+	if ((IsKeyPressed (KEY_W) || IsKeyPressedRepeat (KEY_W))
+	    && game->speed_threshold > 1)
+		{
+			game->speed_threshold--;
+		}
+	if ((IsKeyPressed (KEY_S) || IsKeyPressedRepeat (KEY_S))
+	    && game->speed_threshold < 60)
+		{
+			game->speed_threshold++;
 		}
 
 	if (IsMouseButtonPressed (MOUSE_LEFT_BUTTON))
@@ -172,28 +195,37 @@ game_render (struct game_t *game)
 			               RED);
 		}
 
-	DrawRectangle (0, 0, WINDOW_WIDTH, 40, Fade (LIGHTGRAY, 0.8f));
-	DrawText ("[SPACE] PAUSE/RESUME | [N] STEP | [C] CLEAR BOARD | [MOUSE1] "
-	          "TOGGLE ANT",
-	          10,
-	          12,
-	          18,
-	          BLACK);
+	if (game->show_ui)
+		{
 
-	DrawText (TextFormat ("[ANTS] %d | %s",
-	                      game->ants_active_count,
-	                      game->is_paused ? "PAUSED" : "RUNNING"),
-	          10,
-	          WINDOW_HEIGHT - 30,
-	          20,
-	          (game->is_paused ? RED : DARKGREEN));
+			DrawRectangle (0, 0, WINDOW_WIDTH, 60, Fade (LIGHTGRAY, 0.8f));
+			DrawText ("[SPACE] PAUSE | [N] STEP | [C] CLEAR | [MOUSE1] TOGGLE",
+			          10,
+			          10,
+			          18,
+			          BLACK);
+			DrawText ("[W/S] INC/DEC SPEED | [H] TOGGLE UI | [ESC] EXIT",
+			          10,
+			          35,
+			          18,
+			          BLACK);
+
+			DrawText (TextFormat ("[ANTS] %d | [DELAY] %d | %s",
+			                      game->ants_active_count,
+			                      game->speed_threshold,
+			                      game->is_paused ? "PAUSED" : "RUNNING"),
+			          10,
+			          WINDOW_HEIGHT - 30,
+			          20,
+			          (game->is_paused ? RED : DARKGREEN));
+		}
 }
 
 int
 main (void)
 {
 	InitWindow (WINDOW_WIDTH, WINDOW_HEIGHT, "Ant -- vs-123");
-	SetTargetFPS (30);
+	SetTargetFPS (60);
 
 	struct game_t game = { 0 };
 	game_init (&game);
@@ -204,7 +236,12 @@ main (void)
 
 			if (!game.is_paused)
 				{
-					game_update (&game);
+					game.speed_counter++;
+					if (game.speed_counter >= game.speed_threshold)
+						{
+							game_update (&game);
+							game.speed_counter = 0;
+						}
 				}
 
 			BeginDrawing ();
