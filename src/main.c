@@ -18,8 +18,8 @@ enum direction_t
 {
 	DIRECTION_NORTH,
 	DIRECTION_EAST,
-	DIRECTION_WEST,
 	DIRECTION_SOUTH,
+	DIRECTION_WEST,
 };
 
 struct ant_t
@@ -46,6 +46,45 @@ game_init (struct game_t *game)
 			game->ants[i].y = ystar_between (&game->seed, 0, BOARD_ROWS);
 			game->ants[i].direction
 			    = (enum direction_t) (ystar_between (&game->seed, 0, 4));
+		}
+}
+
+void
+game_update (struct game_t *game)
+{
+	for (int i = 0; i < ANTS_COUNT; i++)
+		{
+			int index = game->ants[i].y * BOARD_COLS + game->ants[i].x;
+
+			if (game->board[index])
+				{
+					game->ants[i].direction = (game->ants[i].direction + 1) % 4;
+					game->board[index]      = false;
+				}
+			else
+				{
+					game->ants[i].direction = (game->ants[i].direction + 3) % 4;
+					game->board[index]      = true;
+				}
+
+			switch (game->ants[i].direction)
+				{
+				case DIRECTION_NORTH:
+					game->ants[i].y--;
+					break;
+				case DIRECTION_EAST:
+					game->ants[i].x++;
+					break;
+				case DIRECTION_SOUTH:
+					game->ants[i].y++;
+					break;
+				case DIRECTION_WEST:
+					game->ants[i].x--;
+					break;
+				}
+
+			game->ants[i].x = (game->ants[i].x + BOARD_COLS) % BOARD_COLS;
+			game->ants[i].y = (game->ants[i].y + BOARD_ROWS) % BOARD_ROWS;
 		}
 }
 
@@ -93,6 +132,8 @@ main (void)
 
 	while (!WindowShouldClose ())
 		{
+			game_update (&game);
+
 			BeginDrawing ();
 			game_render (&game);
 			EndDrawing ();
