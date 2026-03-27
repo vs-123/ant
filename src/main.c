@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #define YSTAR_IMPLEMENTATION
@@ -102,6 +103,12 @@ game_handle_input (struct game_t *game)
 			game_update (game);
 		}
 
+	if (IsKeyPressed (KEY_C))
+		{
+			memset (game->board, 0, BOARD_COLS * BOARD_ROWS * sizeof (bool));
+			game->ants_active_count = 0;
+		}
+
 	if (IsMouseButtonPressed (MOUSE_LEFT_BUTTON))
 		{
 			Vector2 mouse_pos   = GetMousePosition ();
@@ -166,7 +173,8 @@ game_render (struct game_t *game)
 		}
 
 	DrawRectangle (0, 0, WINDOW_WIDTH, 40, Fade (LIGHTGRAY, 0.8f));
-	DrawText ("[SPACE] PAUSE/RESUME | [N] STEP | [MOUSE1] " "TOGGLE ANT",
+	DrawText ("[SPACE] PAUSE/RESUME | [N] STEP | [C] CLEAR BOARD | [MOUSE1] "
+	          "TOGGLE ANT",
 	          10,
 	          12,
 	          18,
